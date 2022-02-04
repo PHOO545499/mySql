@@ -171,3 +171,24 @@ WHERE city LIKE 'ma%'
 GROUP BY city;
 
 15HV
+
+SELECT COUNT(*),city
+FROM employees
+GROUP BY city
+HAVING city LIKE 'ma%';
+
+SELECT city,SUM(salary) AS 'Total salary'
+	FROM employees
+	GROUP BY city;
+
+SELECT city,SUM(salary) AS 'Total salary'
+	FROM employees
+	GROUP BY city
+	HAVING SUM(salary) > 2000000;
+
+SELECT city,SUM(salary) AS 'Total salary'
+	FROM employees
+	GROUP BY city
+	HAVING SUM(salary) > 200000;
+
+_________________________________________________________

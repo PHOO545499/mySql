@@ -1,0 +1,242 @@
+=> Data Base Multiple Trigger
+
+=>Syntax
+
+DELIMITER $$
+
+CREATE TRIGGER triggername
+trigger_time trigger_event
+ON tablename FOR EACH ROW
+specifies existingtriggername
+BEGIN
+	--- statements execute
+END;$$
+
+DELIMITER ;
+
+
+=> trigger_time
+BEFORE
+AFTER
+
+=> trigger_event
+INSERT 
+UPDATE
+DELETE
+
+=>specifies
+PROCEDES(before activate)
+FOLLOWS (after activate)
+
+________________________________________________
+
+CREATE TABLE IF NOT EXISTS staffs(
+	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	name VARCHAR(50),
+	age INT,
+	salary DECIMAL(10,2),
+	status INT DEFAULT 1
+);
+
+DESC staffs;
+
+INSERT INTO staffs(name,age,salary)
+VALUES('aung aung',20,500000),
+('zaw zaw',30,350000);
+
+SELECT * FROM staffs;
+
+CREATE TABLE IF NOT EXISTS salarylogs(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	oldsalary DECIMAL(10,2) NOT NULL,
+	newsalary DECIMAL(10,2) NOT NULL,
+	staff_id INT NOT NULL,
+	updates_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY(staff_id) REFERENCES staffs(id) ON UPDATE CASCADE ON DELETE CASCADE 
+);
+
+DESC salarylogs;
+
+_______________________
+
+=>BEFORE UPDATE
+
+DELIMITER //
+
+CREATE TRIGGER staffsalary_bfu
+BEFORE UPDATE
+ON staffs FOR EACH ROW
+BEGIN
+	IF OLD.salary <> NEW.salary THEN
+		INSERT INTO salarylogs(oldsalary,newsalary,staff_id)
+		VALUES(OLD.salary,NEW.salary,OLD.id);
+	END IF;
+END; //
+
+DELIMITER ;
+
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+can update = other fields
+UPDATE staffs SET age = 25 WHERE id = 1;
+UPDATE staffs SET status = 2 WHERE id = 2;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+
+UPDATE staffs SET salary = 550000 WHERE id = 1;
+UPDATE staffs SET salary = 550000 WHERE id = 1;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+
+UPDATE staffs SET salary = 550000 WHERE id = 2;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+UPDATE staffs SET salary = 350000 WHERE id = 1;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+UPDATE staffs SET salary = 500000 WHERE id = 1;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+INSERT INTO staffs(name,age,salary)
+VALUES('su su',20,350000);
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+
+_______________________
+
+=>BEFORE UPDATE (FOLLOWS)
+
+CREATE TABLE IF NOT EXISTS salarydifflogs(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	diffamount DECIMAL(10,2) NOT NULL,
+	staff_id INT NOT NULL,
+	updateby VARCHAR(50) NOT NULL,
+	FOREIGN KEY(staff_id) REFERENCES staffs(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+DELIMITER //
+	
+CREATE TRIGGER staffsalarydiff_bfuf
+	BEFORE UPDATE ON staffs FOR EACH ROW
+	FOLLOWS staffsalary_bfu
+BEGIN
+	DECLARE oldsalary INT;
+	DECLARE newsalary INT;
+	DECLARE getdiff INT;
+	SET @oldsalary := OLD.salary;
+	SET @newsalary := NEW.salary;
+	SET getdiff = @newsalary - @oldsalary;
+
+	IF OLD.salary <> NEW.salary THEN 
+		INSERT INTO salarydifflogs(diffamount,staff_id,updateby)
+		VALUES(getdiff,OLD.id,User());
+	END IF;
+END; //
+
+
+DELIMITER ;
+
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+SELECT * FROM salarydifflogs;
+
+
+can update = other fields
+UPDATE staffs SET age = 30 WHERE id = 1;
+UPDATE staffs SET status = 1 WHERE id = 2;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+SELECT * FROM salarydifflogs;
+
+
+UPDATE staffs SET salary = 550000 WHERE id = 1;
+UPDATE staffs SET salary = 550000 WHERE id = 1;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+SELECT * FROM salarydifflogs;
+
+
+UPDATE staffs SET salary = 650000 WHERE id = 2;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+SELECT * FROM salarydifflogs;
+
+UPDATE staffs SET salary = 200000 WHERE id = 3;
+SELECT * FROM staffs;
+SELECT * FROM salarylogs;
+SELECT * FROM salarydifflogs;
+
+DROP TRIGGER IF EXISTS staffsalarydiff_bfuf;
+
+________________________________________________
+
+DELIMITER //
+	
+CREATE TRIGGER staffsalarydiff_bfuf
+	BEFORE UPDATE ON staffs FOR EACH ROW
+	FOLLOWS staffsalary_bfu
+BEGIN
+	DECLARE oldsalary INT;
+	DECLARE newsalary INT;
+	DECLARE getdiff INT;
+	SET @oldsalary := OLD.salary;
+	SET @newsalary := NEW.salary;
+	SET getdiff = @newsalary - @oldsalary;
+
+	IF OLD.salary <> NEW.salary THEN 
+		INSERT INTO salarydifflogs(diffamount,staff_id,updateby)
+		VALUES(getdiff,OLD.id,User());
+	END IF;
+END; //
+
+
+DELIMITER ;
+
+=>BEFORE UPDATE (PROCEDES - BEFORE)
+
+HW
+
+	SET @oldsalary = OLD.salary,
+		@newsalary = NEW.salary,
+		@getdiff = @oldsalary - @newsalary;
+
+7PF
+
+Hello! I am AYE MYAT MYAT KYAW . I am from Myanmar. I am fourth year student of MANDALAY TECHNOLOGICAL UNIVERSITY  .You know, our beloved country , Myanmar , is facing with  the military coup . The students in our country are facing trouble about the learning during this current situation . And all of our schools are closed. So , I am searching the courses for my improvement . Now , I am learning the web development and web design . Then , I found myself outstanding in the area of creating design . So ,  I  search the course relating the design . Now , I found this course . I 
+
+After seeing this course , I feel  this  course make me to improve my design skills . 
+Hello! I am AYE MYAT MYAT KYAW . I am from Myanmar. I am fourth year student of MANDALAY TECHNOLOGICAL UNIVERSITY  . You know, our beloved country , Myanmar , is facing with  the military coup . The students in our country are facing trouble about the learning during this current situation . And all of our schools are closed. So , I am searching the courses for my improvement . Now , I am learning the web development and web design . Then , I found myself outstanding in the area of creating design . So ,  I  search the course relating the design . Now , I found this course . I decided to join this course. But , I have no current job , still student . You know , the companies in our country could not provide the job for no degree student . I have no job and no degree and no incomes . I have no degree , so the companies could not provide me job . So , I have no incomes . Therefore , I have to search the free course . So , I do not want to miss this course . If I got this course as financial aid , I am in the seven heaven .  Please , Provide me this course as financial aid .
+
+I am learning the area of  web development and web design . I prefer the web design than the web development . So , I am always trying to get better result about the  design ( user interface ) . Now , I am getting to know that the user experiment design is more important than the user interface design . And then , I am trying the best for the user experiment .  however , I am not satisfied myself about my user interface and user experiment skill . So , I start the courses and the resources relating the user interface and user experiment . Now  ,  I found this course . This course includes the user interface and the user experiment I found . I want to improve my skills 
+
+I am learning the area of  web development and web design . I prefer the web design than the web development . So , I am always trying to get better result about the  design ( user interface ) . Now , I am getting to know that the user experience design is more important than the user interface design . And then , I am trying the best for the user experience .  however , I am not satisfied myself about my user interface and user experience skill . So , I start the courses and the resources relating the user interface and user experience . Now  ,  I found this course . This course includes the user interface and the user experience I found . I believe that this course gives me more improvement , more skills , more confidence and more experiences about user interface design and user experience . I am sure about that I will learn this course until the very end . 
+
+staffs
+id
+name
+age
+salary
+status
+
+salarylogs
+id
+oldsalary
+newsalary
+staff_id
+update_at
+
+
+-_________
+
+
+salary
+id
+diffamount
+staff_id
+update_by

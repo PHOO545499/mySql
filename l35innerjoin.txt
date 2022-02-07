@@ -125,7 +125,7 @@ RESULT = order table ka data a yin come out mar
 {SELECT * FROM orders,customers
 WHERE customers.id = orders.customer_id;
 
-ELECT * FROM orders,customers
+SELECT * FROM orders,customers
 WHERE orders.customer_id = customers.id;}
 
 =>***METHOD 2 (EXPLICIT INNER JOIN) 
